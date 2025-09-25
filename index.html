@@ -1,157 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini Ptero Panel</title>
-<style>
-body{margin:0;font-family:'Segoe UI',sans-serif;background:#181c24;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;}
-#login,#panel{width:450px;padding:30px;background:#242933;border-radius:10px;display:flex;flex-direction:column;align-items:center;}
-#login h2{margin-bottom:20px;color:#3498db;}
-#login input{width:250px;padding:10px;margin:8px 0;border-radius:5px;border:none;background:#1f242d;color:#fff;}
-#login button{width:270px;padding:10px;margin-top:10px;border-radius:5px;border:none;background:#3498db;color:#fff;font-weight:bold;cursor:pointer;transition:.2s;}
-#login button:hover{opacity:.8;}
-#panel{display:none;flex-direction:column;width:500px;}
-#buttons{display:flex;justify-content:space-between;margin-bottom:15px;}
-#buttons button{flex:1;margin:0 5px;padding:12px 0;font-weight:bold;border-radius:6px;border:none;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,0.2);transition:.2s;}
-#start{background:#3498db;}#restart{background:#7f8c8d;}#clear{background:#9b59b6;}#stop{background:#e74c3c;}
-#buttons button:hover{transform:translateY(1px);}
-#console{background:#000;height:250px;border-radius:6px;padding:10px;overflow-y:auto;font-size:14px;line-height:1.4;margin-bottom:10px;scroll-behavior:smooth;}
-.log-info{color:#3498db;}.log-warn{color:#f1c40f;}.log-error{color:#e74c3c;}.log-command{color:#2ecc71;}.log-system{color:#fff;}
-.blink{animation:blink .3s;}@keyframes blink{0%{background-color:#111;}50%{background-color:#222;}100%{background-color:#111;}}
-#command{width:100%;padding:10px;border-radius:5px;border:none;background:#1f242d;color:#fff;}
-</style>
+  <meta charset="UTF-8">
+  <title>Ptero Mini Panel</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #111827;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #login, #panel { 
+      background: #1f2937; 
+      padding: 20px; 
+      border-radius: 8px; 
+      box-shadow: 0 0 10px rgba(0,0,0,.5); 
+      width: 500px;
+    }
+    h2 { text-align:center; }
+    input, button { 
+      width: 100%; 
+      margin: 5px 0; 
+      padding: 10px; 
+      border-radius: 4px; 
+      border: none;
+    }
+    button { cursor:pointer; font-weight:bold; }
+    #start { background:#3b82f6; color:white; }
+    #restart { background:#6b7280; color:white; }
+    #clear { background:#10b981; color:white; }
+    #stop { background:#ef4444; color:white; }
+    #buttons { display:flex; gap:10px; margin-bottom:10px; }
+    #buttons button { flex:1; }
+    #console {
+      background:#000;
+      height:250px;
+      overflow-y:auto;
+      padding:10px;
+      border-radius:4px;
+      font-size:14px;
+      margin-bottom:10px;
+    }
+    .log-info { color:#3b82f6; }
+    .log-system { color:#10b981; }
+    .log-error { color:#ef4444; }
+    #command { width:100%; }
+  </style>
 </head>
 <body>
+  <div id="login">
+    <h2>Login Panel</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <p id="loginMsg"></p>
+  </div>
 
-<div id="login">
-<h2>Pterodactyl Login</h2>
-<input type="text" id="username" placeholder="Username">
-<input type="password" id="password" placeholder="Password">
-<button id="loginBtn">Login</button>
-<p id="loginMsg" style="color:#e74c3c;margin-top:10px;"></p>
-</div>
+  <div id="panel" style="display:none;">
+    <h2>Ptero Mini Panel</h2>
+    <div id="buttons">
+      <button id="start">Start</button>
+      <button id="restart">Restart</button>
+      <button id="clear">Clear</button>
+      <button id="stop">Stop</button>
+    </div>
+    <div id="console"></div>
+    <input type="text" id="command" placeholder="Type a command...">
+  </div>
 
-<div id="panel">
-<div id="buttons">
-<button id="start">Start</button>
-<button id="restart">Restart</button>
-<button id="clear">Clear</button>
-<button id="stop">Stop</button>
-</div>
-<div id="console"></div>
-<input type="text" id="command" placeholder="Type a command...">
-</div>
+  <script>
+    const users = {
+      "ROWR123":"ROWR12311",
+      "GOG_GOG":"ROLE_ADMIN",
+      "SPIDER":"SPIDERMAN"
+    };
 
-<script>
-// USERS
-const users=[
-  {user:"ROWR123",pass:"ROWR12311"},
-  {user:"GOG_GOG",pass:"ROLE_ADMIN"},
-  {user:"SPIDER",pass:"SPIDERMAN"}
-];
+    const loginDiv=document.getElementById("login");
+    const panelDiv=document.getElementById("panel");
+    const loginBtn=document.getElementById("loginBtn");
+    const loginMsg=document.getElementById("loginMsg");
+    const consoleDiv=document.getElementById("console");
+    const commandInput=document.getElementById("command");
 
-// ELEMENTS
-const loginDiv=document.getElementById('login');
-const panelDiv=document.getElementById('panel');
-const loginBtn=document.getElementById('loginBtn');
-const usernameInput=document.getElementById('username');
-const passwordInput=document.getElementById('password');
-const loginMsg=document.getElementById('loginMsg');
-const consoleDiv=document.getElementById('console');
-const commandInput=document.getElementById('command');
+    const startBtn=document.getElementById("start");
+    const restartBtn=document.getElementById("restart");
+    const clearBtn=document.getElementById("clear");
+    const stopBtn=document.getElementById("stop");
 
-const startBtn=document.getElementById('start');
-const restartBtn=document.getElementById('restart');
-const clearBtn=document.getElementById('clear');
-const stopBtn=document.getElementById('stop');
+    let spamIntervals=[];
+    let spamQueue=JSON.parse(localStorage.getItem("spamQueue")||"[]");
 
-// LOCAL STORAGE & SPAM
-let spamQueue=JSON.parse(localStorage.getItem('spamQueue'))||[];
-let spamIntervals=[];
-function saveSpam(){localStorage.setItem('spamQueue',JSON.stringify(spamQueue));}
-function startSpam(target){
-  let count=0;
-  const interval=setInterval(()=>{
-    if(count>=100){clearInterval(interval);return;}
-    appendLog(`(${target}) PTERODACRUS KILL YOUUU! 🩸🩸🔪🔪`,"log-error");
-    count++;
-    spamQueue.push(target); saveSpam();
-  },100);
-  spamIntervals.push(interval);
-}
-// Restore spam after login
-if(spamQueue.length>0){spamQueue.forEach(t=>startSpam(t)); spamQueue=[]; saveSpam();}
-
-// LOG FUNCTION
-function appendLog(text,type="log-info"){
-  const p=document.createElement('div');
-  p.className=type+" blink";
-  p.innerHTML=text;
-  consoleDiv.appendChild(p);
-  consoleDiv.scrollTop=consoleDiv.scrollHeight;
-  setTimeout(()=>p.classList.remove("blink"),300);
-}
-
-// LOGIN
-loginBtn.addEventListener('click',()=>{
-  const username=usernameInput.value;
-  const password=passwordInput.value;
-  const valid=users.find(u=>u.user===username&&u.pass===password);
-  if(valid){
-    loginMsg.style.color="#2ecc71";
-    loginMsg.textContent="Login successful! Loading panel...";
-    setTimeout(()=>{
-      loginDiv.style.display="none";
-      panelDiv.style.display="flex";
-      appendLog(`[INFO] Welcome ${username}!`,"log-info");
-    },3000);
-  } else {
-    loginMsg.style.color="#e74c3c";
-    loginMsg.textContent="Invalid credentials!";
-  }
-});
-
-// BUTTONS
-startBtn.addEventListener('click',()=>appendLog("[START] Server started.","log-info"));
-restartBtn.addEventListener('click',()=>appendLog("[RESTART] Server restarting...","log-warn"));
-stopBtn.addEventListener('click',()=>appendLog("[STOP] Server stopped.","log-error"));
-clearBtn.addEventListener('click',()=>{
-  spamIntervals.forEach(i=>clearInterval(i));
-  spamIntervals=[];
-  spamQueue=[];
-  saveSpam();
-  consoleDiv.innerHTML="";
-  appendLog("Console cleared!","log-system");
-});
-
-// COMMAND INPUT
-commandInput.addEventListener('keydown',e=>{
-  if(e.key==="Enter"&&commandInput.value.trim()!==""){
-    const val=commandInput.value.trim();
-    const lower=val.toLowerCase();
-    appendLog(`[${usernameInput.value}@server~] ${val}`,"log-command");
-
-    if(lower==="zyn"){
-      appendLog("𝚆𝙰𝙸𝚃❤️‍🩹❤️‍🩹❤️‍🩹","log-system");
-      setTimeout(()=>appendLog("👋 HELLOW! TERRIFYING HUMAN!😈 Type owner or bug menu if you want to know","log-system"),10000);
-    }else if(lower==="owner"){
-      appendLog("The owner is zyn!","log-system");
-    }else if(lower==="menu bug"){
-      appendLog("𝚆𝙰𝙸𝚃𝙸𝙽𝙶 𝟷𝟶 𝚂𝙴𝙲𝙾𝙽𝙳𝚂👾👾👾...","log-system");
-      setTimeout(()=>appendLog("TYPE OF BUG!\nAndroid-Crash\nZynLoves\nMeta-crash\nBackdoor\nVirus-crash\nDelay-maker\nHard-mount\nData-sucking\nBang","log-system"),5000);
-    }else if(lower.startsWith("send bug")){
-      const match=val.match(/send bug (\S+) for (.+)/i);
-      if(match){
-        const target=match[1];
-        appendLog(`SEND BUG TO ${target}`,"log-system");
-        setTimeout(()=>{startSpam(target);},5000);
-      }
+    function appendLog(msg,cls="log-info"){
+      const p=document.createElement("div");
+      p.className=cls;
+      p.textContent=msg;
+      consoleDiv.appendChild(p);
+      consoleDiv.scrollTop=consoleDiv.scrollHeight;
     }
-    commandInput.value="";
-  }
-});
-</script>
 
+    function saveSpam(){
+      localStorage.setItem("spamQueue",JSON.stringify(spamQueue));
+    }
+
+    function startSpam(target){
+      let count=0;
+      const interval=setInterval(()=>{
+        if(count>=100){clearInterval(interval);return;}
+        appendLog(`(${target}) PTERODACRUS KILL YOUUU! 🩸🩸🔪🔪`,"log-error");
+        count++;
+        spamQueue.push(target);
+        saveSpam();
+      },100);
+      spamIntervals.push(interval);
+    }
+
+    function restoreSpam(){
+      spamQueue.forEach(target=>{
+        appendLog(`(${target}) PTERODACRUS KILL YOUUU! 🩸🩸🔪🔪`,"log-error");
+      });
+    }
+
+    loginBtn.addEventListener("click",()=>{
+      const u=document.getElementById("username").value;
+      const p=document.getElementById("password").value;
+      if(users[u]===p){
+        loginMsg.textContent="Login success, loading panel...";
+        setTimeout(()=>{
+          loginDiv.style.display="none";
+          panelDiv.style.display="block";
+          restoreSpam();
+        },3000);
+      } else {
+        loginMsg.textContent="Invalid login!";
+      }
+    });
+
+    startBtn.onclick=()=>appendLog("Server started","log-info");
+    restartBtn.onclick=()=>appendLog("Server restarted","log-info");
+    stopBtn.onclick=()=>appendLog("Server stopped","log-error");
+
+    clearBtn.onclick=()=>{
+      spamIntervals.forEach(i=>clearInterval(i));
+      spamIntervals=[];
+      spamQueue=[];
+      saveSpam();
+      consoleDiv.innerHTML="";
+      appendLog("Console cleared!","log-system");
+    };
+
+    commandInput.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){
+        const cmd=commandInput.value.trim();
+        commandInput.value="";
+        if(!cmd)return;
+        appendLog("> "+cmd,"log-info");
+
+        const lower=cmd.toLowerCase();
+        if(lower==="zyn"){
+          appendLog("𝚆𝙰𝙸𝚃❤️‍🩹❤️‍🩹❤️‍🩹","log-system");
+          setTimeout(()=>appendLog("👋 HELLOW! TERRIFYING HUMAN!😈 Type owner or bug menu if you want to know","log-system"),3000);
+        } else if(lower==="owner"){
+          appendLog("The owner is zyn!","log-system");
+        } else if(lower==="bug menu"){
+          appendLog("𝚆𝙰𝙸𝚃𝙸𝙽𝙶 𝟷𝟶 𝚂𝙴𝙲𝙾𝙽𝙳𝚂👾👾👾...","log-system");
+          setTimeout(()=>{
+            appendLog("TYPE OF BUG!\nAndroid-Crash\nZynLoves\nMeta-crash\nBackdoor\nVirus-crash\nDelay-maker\nHard-mount\nData-sucking\nBang","log-system");
+          },5000);
+        } else if(lower.startsWith("send bug")){
+          const parts=cmd.split(" ");
+          if(parts.length>=4){
+            const target=parts[2];
+            appendLog(`SEND BUG TO ${target}`,"log-system");
+            setTimeout(()=>startSpam(target),5000);
+          }
+        } else {
+          appendLog("Unknown command","log-error");
+        }
+      }
+    });
+  </script>
 </body>
 </html>
