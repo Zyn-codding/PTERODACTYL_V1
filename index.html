@@ -5,36 +5,154 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mini Pterodactyl Panel</title>
 <style>
-body { font-family: Arial, sans-serif; margin:0; background:#1e1e2f; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; }
-#loginPage, #panelPage { width: 100%; max-width: 500px; }
-input { width: 100%; padding:10px; margin:5px 0; border-radius:5px; border:none; font-size:16px; }
-button { padding:10px 20px; margin-top:10px; width:100%; font-size:16px; cursor:pointer; border:none; border-radius:5px; background:#4caf50; color:#fff; }
-#notif { margin-top:10px; color:#fff; text-align:center; display:none; }
-#panelPage { display:none; width:100%; max-width:800px; margin:20px auto; }
-.nav { display: flex; background: #2a2a3f; flex-wrap: wrap; }
-.nav button { flex:1; padding: 15px; border:none; background:none; color:#fff; cursor:pointer; font-size:16px; min-width: 120px; }
-.nav button.active { background: #444466; }
-.page { padding: 20px; display: none; }
-.page.active { display: block; }
-button.action { padding: 10px 20px; margin: 5px; cursor:pointer; background:#4caf50; border:none; color:#fff; font-size:16px; border-radius:5px; }
-button.action.stop { background:#f44336; }
-button.action.restart { background:#ff9800; }
-#notifPanel { position: fixed; bottom:20px; right:20px; background:#333; padding:10px 20px; border-radius:5px; display:none; }
+  body {
+    font-family: monospace;
+    background-color: #1e1e2f;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  #login, #panel {
+    width: 400px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #2a2a3f;
+    display: none;
+    flex-direction: column;
+  }
+  #login { display: flex; }
+  input {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 4px;
+    border: none;
+    width: 100%;
+  }
+  button {
+    padding: 10px;
+    margin: 5px 2px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    font-weight: bold;
+  }
+  #start { background-color: #3498db; }
+  #restart { background-color: #7f8c8d; }
+  #stop { background-color: #e74c3c; }
+  #console {
+    background-color: #000;
+    height: 200px;
+    margin-top: 10px;
+    padding: 10px;
+    overflow-y: auto;
+    border-radius: 4px;
+  }
+  #command {
+    margin-top: 10px;
+    width: 100%;
+  }
 </style>
 </head>
 <body>
 
-<!-- Login Page -->
-<div id="loginPage">
-    <h2 style="text-align:center;">Login Panel</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button id="loginBtn">Login</button>
-    <div id="notif"></div>
+<div id="login">
+  <h3>Login</h3>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button id="loginBtn">Login</button>
+  <p id="loginMsg" style="color: #f00;"></p>
 </div>
 
-<!-- Panel Page -->
-<div id="panelPage">
+<div id="panel">
+  <div>
+    <button id="start">Start</button>
+    <button id="restart">Restart</button>
+    <button id="stop">Stop</button>
+  </div>
+  <div id="console"></div>
+  <input type="text" id="command" placeholder="Type a command...">
+</div>
+
+<script>
+const loginBtn = document.getElementById('loginBtn');
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const loginMsg = document.getElementById('loginMsg');
+const loginDiv = document.getElementById('login');
+const panelDiv = document.getElementById('panel');
+const consoleDiv = document.getElementById('console');
+const commandInput = document.getElementById('command');
+
+const startBtn = document.getElementById('start');
+const restartBtn = document.getElementById('restart');
+const stopBtn = document.getElementById('stop');
+
+const dummyLogs = [
+  "container@pterodactyl~ Server marked as offline...",
+  "Starting server...",
+  "Server booting up...",
+  "Server online!",
+  "Performing routine check..."
+];
+
+// Simple username/password
+const users = [
+  {user: "ROWR123", pass: "ROWR12311"},
+  {user: "GOG_GOG", pass: "ROLE_ADMIN"},
+  {user: "SPIDER", pass: "SPIDERMAN"}
+];
+
+// Login handler
+loginBtn.addEventListener('click', () => {
+  const user = usernameInput.value;
+  const pass = passwordInput.value;
+  const valid = users.find(u => u.user === user && u.pass === pass);
+  if(valid){
+    loginMsg.textContent = "Login successful! Loading panel...";
+    setTimeout(() => {
+      loginDiv.style.display = "none";
+      panelDiv.style.display = "flex";
+      startDummyLogs();
+    }, 3000);
+  } else {
+    loginMsg.textContent = "Invalid credentials!";
+  }
+});
+
+// Dummy console log
+function startDummyLogs() {
+  let i = 0;
+  const interval = setInterval(() => {
+    if(i >= dummyLogs.length) { clearInterval(interval); return; }
+    appendLog(dummyLogs[i]);
+    i++;
+  }, 1000);
+}
+
+function appendLog(text){
+  consoleDiv.innerHTML += text + "<br>";
+  consoleDiv.scrollTop = consoleDiv.scrollHeight;
+}
+
+// Command input
+commandInput.addEventListener('keydown', (e) => {
+  if(e.key === "Enter" && commandInput.value.trim() !== ""){
+    appendLog("> " + commandInput.value.trim());
+    commandInput.value = "";
+  }
+});
+
+// Button actions
+startBtn.addEventListener('click', () => appendLog("[START] Server started."));
+restartBtn.addEventListener('click', () => appendLog("[RESTART] Server restarting..."));
+stopBtn.addEventListener('click', () => appendLog("[STOP] Server stopped."));
+</script>
+
+</body>
+</html><div id="panelPage">
 <div class="nav">
     <button class="active" data-page="console">Console</button>
     <button data-page="files">Files</button>
