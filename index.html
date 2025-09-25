@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Pterodactyl Panel</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; background:#1e1e2f; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; }
+#loginPage, #panelPage { width: 100%; max-width: 500px; }
+input { width: 100%; padding:10px; margin:5px 0; border-radius:5px; border:none; font-size:16px; }
+button { padding:10px 20px; margin-top:10px; width:100%; font-size:16px; cursor:pointer; border:none; border-radius:5px; background:#4caf50; color:#fff; }
+#notif { margin-top:10px; color:#fff; text-align:center; display:none; }
+#panelPage { display:none; width:100%; max-width:800px; margin:20px auto; }
+.nav { display: flex; background: #2a2a3f; flex-wrap: wrap; }
+.nav button { flex:1; padding: 15px; border:none; background:none; color:#fff; cursor:pointer; font-size:16px; min-width: 120px; }
+.nav button.active { background: #444466; }
+.page { padding: 20px; display: none; }
+.page.active { display: block; }
+button.action { padding: 10px 20px; margin: 5px; cursor:pointer; background:#4caf50; border:none; color:#fff; font-size:16px; border-radius:5px; }
+button.action.stop { background:#f44336; }
+button.action.restart { background:#ff9800; }
+#notifPanel { position: fixed; bottom:20px; right:20px; background:#333; padding:10px 20px; border-radius:5px; display:none; }
+</style>
+</head>
+<body>
+
+<!-- Login Page -->
+<div id="loginPage">
+    <h2 style="text-align:center;">Login Panel</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <div id="notif"></div>
+</div>
+
+<!-- Panel Page -->
+<div id="panelPage">
+<div class="nav">
+    <button class="active" data-page="console">Console</button>
+    <button data-page="files">Files</button>
+    <button data-page="database">Database</button>
+    <button data-page="schedules">Schedules</button>
+</div>
+
+<div id="console" class="page active">
+    <h2>Console</h2>
+    <button class="action run">Run</button>
+    <button class="action restart">Restart</button>
+    <button class="action stop">Stop</button>
+</div>
+
+<div id="files" class="page">
+    <h2>Files</h2>
+    <input type="file" id="fileInput" style="display:none;">
+    <button class="action" id="placeFiles">Place Files</button>
+</div>
+
+<div id="database" class="page">
+    <h2>Database</h2>
+    <p>Dummy page untuk database</p>
+</div>
+
+<div id="schedules" class="page">
+    <h2>Schedules</h2>
+    <p>Dummy page untuk schedules</p>
+</div>
+
+<div id="notifPanel"></div>
+</div>
+
+<script>
+// Login
+const loginBtn = document.getElementById('loginBtn');
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const notifLogin = document.getElementById('notif');
+const loginPage = document.getElementById('loginPage');
+const panelPage = document.getElementById('panelPage');
+
+loginBtn.addEventListener('click', () => {
+    const user = usernameInput.value.trim();
+    const pass = passwordInput.value.trim();
+    if(user === 'press' && pass === 'Testione'){
+        notifLogin.style.color = '#4caf50';
+        notifLogin.textContent = 'Login berhasil, tunggu sebentar...';
+        notifLogin.style.display = 'block';
+        setTimeout(() => {
+            loginPage.style.display = 'none';
+            panelPage.style.display = 'block';
+        }, 3000); // delay 3 detik
+    } else {
+        notifLogin.style.color = '#ff5252';
+        notifLogin.textContent = 'Username atau password salah';
+        notifLogin.style.display = 'block';
+        setTimeout(()=>{ notifLogin.style.display = 'none'; },2000);
+    }
+});
+
+// Panel navigation
+const navButtons = document.querySelectorAll('.nav button');
+const pages = document.querySelectorAll('.page');
+const notif = document.getElementById('notifPanel');
+
+navButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        navButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const pageId = btn.getAttribute('data-page');
+        pages.forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+    });
+});
+
+// Console buttons
+document.querySelector('.action.run').addEventListener('click', () => showNotif('Server running...'));
+document.querySelector('.action.restart').addEventListener('click', () => showNotif('Server restarted'));
+document.querySelector('.action.stop').addEventListener('click', () => showNotif('Server stopped'));
+
+// Files page
+const fileInput = document.getElementById('fileInput');
+document.getElementById('placeFiles').addEventListener('click', () => { fileInput.click(); });
+fileInput.addEventListener('change', (e) => {
+    if(e.target.files.length > 0) showNotif(`File selected: ${e.target.files[0].name}`);
+});
+
+// Function notif
+function showNotif(msg) {
+    notif.textContent = msg;
+    notif.style.display = 'block';
+    setTimeout(() => { notif.style.display = 'none'; }, 2000);
+}
+</script>
+
+</body>
+</html>
