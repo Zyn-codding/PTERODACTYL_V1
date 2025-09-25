@@ -92,6 +92,141 @@
     const stopBtn=document.getElementById("stop");
 
     let spamIntervals=[];
+
+    function appendLog(msg,cls="log-info"){
+      const p=document.createElement("div");
+      p.className=cls;
+      p.textContent=msg;
+      consoleDiv.appendChild(p);
+      consoleDiv.scrollTop=consoleDiv.scrollHeight;
+    }
+
+    function startSpam(target){
+      let count=0;
+      const spamMessage = `(${target}) PTERODACTYL KILLS YOUU! 🔪🔪🩸🩸❤️‍🩹 NUKE LAUNCHED! 🚀🩸🚀🩸🚀🩸 | • HE IS DEAD • | BUG LAUNCHED | The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn`;
+      const interval=setInterval(()=>{
+        if(count>=350){clearInterval(interval);return;}
+        appendLog(spamMessage,"log-error");
+        count++;
+      },100);
+      spamIntervals.push(interval);
+    }
+
+    loginBtn.addEventListener("click",()=>{
+      const u=document.getElementById("username").value;
+      const p=document.getElementById("password").value;
+      if(users[u]===p){
+        loginMsg.textContent="Login success, loading panel...";
+        setTimeout(()=>{
+          loginDiv.style.display="none";
+          panelDiv.style.display="block";
+        },3000);
+      } else {
+        loginMsg.textContent="Invalid login!";
+      }
+    });
+
+    startBtn.onclick=()=>appendLog("Server started","log-info");
+    restartBtn.onclick=()=>appendLog("Server restarted","log-info");
+    stopBtn.onclick=()=>appendLog("Server stopped","log-error");
+
+    clearBtn.onclick=()=>{
+      spamIntervals.forEach(i=>clearInterval(i));
+      spamIntervals=[];
+      consoleDiv.innerHTML="";
+      appendLog("Console cleared!","log-system");
+    };
+
+    commandInput.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){
+        const cmd=commandInput.value.trim();
+        commandInput.value="";
+        if(!cmd)return;
+        appendLog("> "+cmd,"log-info");
+
+        const lower=cmd.toLowerCase();
+        if(lower==="zyn"){
+          appendLog("𝚆𝙰𝙸𝚃❤️‍🩹❤️‍🩹❤️‍🩹","log-system");
+          setTimeout(()=>appendLog("👋 HELLOW! TERRIFYING HUMAN!😈 Type owner or bug menu if you want to know","log-system"),3000);
+        } else if(lower==="owner"){
+          appendLog("The owner is zyn!","log-system");
+        } else if(lower==="bug menu"){
+          appendLog("𝚆𝙰𝙸𝚃𝙸𝙽𝙶 𝟷𝟶 𝚂𝙴𝙲𝙾𝙽𝙳𝚂👾👾👾...","log-system");
+          setTimeout(()=>{
+            appendLog("TYPE OF BUG!\nAndroid-Crash\nZynLoves\nMeta-crash\nBackdoor\nVirus-crash\nDelay-maker\nHard-mount\nData-sucking\nBang","log-system");
+          },5000);
+        } else if(lower.startsWith("send bug")){
+          const parts=cmd.split(" ");
+          if(parts.length>=4){
+            const target=parts[2];
+            appendLog(`SEND BUG TO ${target}`,"log-system");
+            setTimeout(()=>startSpam(target),5000);
+          }
+        } else {
+          appendLog("Unknown command","log-error");
+        }
+      }
+    });
+  </script>
+</body>
+</html>    #buttons { display:flex; gap:10px; margin-bottom:10px; }
+    #buttons button { flex:1; }
+    #console {
+      background:#000;
+      height:250px;
+      overflow-y:auto;
+      padding:10px;
+      border-radius:4px;
+      font-size:14px;
+      margin-bottom:10px;
+    }
+    .log-info { color:#3b82f6; }
+    .log-system { color:#10b981; }
+    .log-error { color:#ef4444; }
+    #command { width:100%; }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <h2>Login Panel</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <p id="loginMsg"></p>
+  </div>
+
+  <div id="panel" style="display:none;">
+    <h2>Ptero Mini Panel</h2>
+    <div id="buttons">
+      <button id="start">Start</button>
+      <button id="restart">Restart</button>
+      <button id="clear">Clear</button>
+      <button id="stop">Stop</button>
+    </div>
+    <div id="console"></div>
+    <input type="text" id="command" placeholder="Type a command...">
+  </div>
+
+  <script>
+    const users = {
+      "ROWR123":"ROWR12311",
+      "GOG_GOG":"ROLE_ADMIN",
+      "SPIDER":"SPIDERMAN"
+    };
+
+    const loginDiv=document.getElementById("login");
+    const panelDiv=document.getElementById("panel");
+    const loginBtn=document.getElementById("loginBtn");
+    const loginMsg=document.getElementById("loginMsg");
+    const consoleDiv=document.getElementById("console");
+    const commandInput=document.getElementById("command");
+
+    const startBtn=document.getElementById("start");
+    const restartBtn=document.getElementById("restart");
+    const clearBtn=document.getElementById("clear");
+    const stopBtn=document.getElementById("stop");
+
+    let spamIntervals=[];
     let spamQueue=JSON.parse(localStorage.getItem("spamQueue")||"[]");
 
     function appendLog(msg,cls="log-info"){
