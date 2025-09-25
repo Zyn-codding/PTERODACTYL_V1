@@ -1,108 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Ptero Mini Panel</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ptero Mini Panel (Zyn)</title>
   <style>
-    body {
-      background:#0d1117;
-      color:white;
-      font-family:monospace;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-    }
-    #login, #panel {
-      background:#161b22;
-      padding:20px;
-      border-radius:8px;
-      box-shadow:0 0 10px rgba(0,0,0,0.5);
-    }
-    #panel { display:none; flex-direction:column; width:90%; max-width:600px; }
-    #buttons { display:flex; gap:10px; margin-bottom:10px; }
-    #buttons button { flex:1; padding:10px; border:none; border-radius:4px; cursor:pointer; font-size:14px; }
-    #buttons .start { background:#3b82f6; color:white; }
-    #buttons .restart { background:#9ca3af; color:white; }
-    #buttons .stop { background:#ef4444; color:white; }
-    #buttons .clear { background:#10b981; color:white; }
-    #console {
-      background:#000;
-      height:250px;
-      overflow-y:auto;
-      padding:10px;
-      border-radius:4px;
-      margin-bottom:10px;
-      font-size:14px;
-    }
-    #command { width:100%; padding:8px; border:none; border-radius:4px; }
+    :root{--bg:#0f1724;--card:#111827;--muted:#94a3b8;--accent:#2563eb;--green:#10b981;--red:#ef4444}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,monospace;background:var(--bg);color:#e6eef8}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:30px;box-sizing:border-box}
+    .card{width:520px;background:var(--card);border-radius:10px;padding:20px;box-shadow:0 6px 24px rgba(2,6,23,.6)}
+    h1{margin:0 0 12px;font-size:18px;color:var(--accent)}
+    input[type="text"],input[type="password"],#command{width:100%;padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,.04);background:#0b1220;color:#e6eef8;box-sizing:border-box}
+    button{padding:10px 12px;border-radius:6px;border:none;background:var(--accent);color:white;cursor:pointer;font-weight:600}
+    .buttons{display:flex;gap:8px;margin-bottom:12px}
+    .btn-start{background:#3b82f6}.btn-restart{background:#64748b}.btn-clear{background:#7c3aed}.btn-stop{background:#ef4444}
+    #console{background:#000;height:240px;border-radius:8px;padding:10px;overflow:auto;font-size:13px;line-height:1.4;white-space:pre-wrap}
+    .log-info{color:#c7e0ff}.log-system{color:#a7f3d0}.log-error{color:#ffb4b4}.log-command{color:#bde5a8}
+    .small{font-size:12px;color:var(--muted);margin-top:8px}
   </style>
 </head>
 <body>
-  <div id="login">
-    <h2>Login Panel</h2>
-    <input id="username" type="text" placeholder="Username"><br><br>
-    <input id="password" type="password" placeholder="Password"><br><br>
-    <button onclick="login()">Login</button>
-  </div>
-
-  <div id="panel">
-    <div id="buttons">
-      <button class="start" onclick="log('Server started')">Start</button>
-      <button class="restart" onclick="log('Server restarted')">Restart</button>
-      <button class="stop" onclick="log('Server stopped')">Stop</button>
-      <button class="clear" onclick="clearConsole()">Clear</button>
+  <div class="wrap">
+    <div class="card" id="loginCard">
+      <h1>Pterodactyl Login</h1>
+      <input id="username" type="text" placeholder="Username" />
+      <div style="height:8px"></div>
+      <input id="password" type="password" placeholder="Password" />
+      <div style="height:10px"></div>
+      <button id="loginBtn">Login</button>
+      <p class="small" id="loginMsg" style="color:#f87171"></p>
     </div>
-    <div id="console"></div>
-    <input id="command" placeholder="Type a command..." onkeypress="handleCommand(event)">
+
+    <div class="card" id="panelCard" style="display:none;max-width:720px;width:100%">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h1>Ptero Mini Panel — zyn</h1>
+        <div style="color:var(--muted);font-size:13px">Logged as <span id="who">-</span></div>
+      </div>
+
+      <div class="buttons" style="margin-top:8px">
+        <button id="start" class="btn-start">Run</button>
+        <button id="restart" class="btn-restart">Restart</button>
+        <button id="clear" class="btn-clear">Clear</button>
+        <button id="stop" class="btn-stop">Stop</button>
+      </div>
+
+      <div id="console"></div>
+
+      <div style="height:8px"></div>
+      <input id="command" type="text" placeholder="Type a command (e.g. zyn / owner / bug menu / send bug 0812 for X / 2014 )" disabled />
+      <p class="small">Commands: <code>zyn</code>, <code>owner</code>, <code>bug menu</code>, <code>send bug &lt;target&gt; for &lt;type&gt;</code>, secret: <code>2014</code></p>
+    </div>
   </div>
 
   <script>
-    const users = {
-      "ROWR123": "ROWR12311",
-      "GOG_GOG": "ROLE_ADMIN",
-      "SPIDER": "SPIDERMAN"
-    };
+    // initial users (session-only)
+    const USERS = {"ROWR123":"ROWR12311","GOG_GOG":"ROLE_ADMIN","SPIDER":"SPIDERMAN"};
 
-    function login(){
-      const u = document.getElementById("username").value;
-      const p = document.getElementById("password").value;
-      if(users[u] && users[u]===p){
-        document.getElementById("login").style.display="none";
+    // elements
+    const loginCard = document.getElementById('loginCard');
+    const panelCard = document.getElementById('panelCard');
+    const loginBtn = document.getElementById('loginBtn');
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+    const loginMsg = document.getElementById('loginMsg');
+    const who = document.getElementById('who');
+
+    const consoleEl = document.getElementById('console');
+    const commandEl = document.getElementById('command');
+
+    const startBtn = document.getElementById('start');
+    const restartBtn = document.getElementById('restart');
+    const clearBtn = document.getElementById('clear');
+    const stopBtn = document.getElementById('stop');
+
+    // spam controller (session-only)
+    let spamIntervals = [];
+
+    // create-user state
+    let createMode = false;
+    let pendingNewUser = null;
+    let pendingNewPass = null;
+
+    function appendLog(text, cls='log-info'){
+      const d = document.createElement('div');
+      d.className = cls;
+      d.textContent = text;
+      consoleEl.appendChild(d);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function clearConsoleAndStopSpam(){
+      spamIntervals.forEach(i=>clearInterval(i));
+      spamIntervals = [];
+      consoleEl.innerHTML = '';
+      appendLog('Console cleared!', 'log-system');
+    }
+
+    // login
+    loginBtn.addEventListener('click', ()=>{
+      const u = usernameEl.value.trim();
+      const p = passwordEl.value;
+      if(!u || !p){ loginMsg.textContent = 'Fill username & password'; return; }
+      if(USERS[u] && USERS[u]===p){
+        loginMsg.textContent = '';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Logging in...';
         setTimeout(()=>{
-          document.getElementById("panel").style.display="flex";
-          log("container@pterodactyl~ Server marked as offline…");
-        },3000);
+          loginCard.style.display = 'none';
+          panelCard.style.display = 'block';
+          who.textContent = u;
+          appendLog('container@pterodactyl~ Server marked as offline…', 'log-error');
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Login';
+        }, 3000);
       } else {
-        alert("Invalid credentials");
+        loginMsg.textContent = 'Invalid credentials!';
       }
+    });
+
+    // server control behavior: command input disabled until Run
+    function setServerOnline(on){
+      commandEl.disabled = !on;
+      if(on) appendLog('[SERVER ONLINE] Input enabled', 'log-system');
+      else appendLog('[SERVER OFFLINE] Input disabled', 'log-system');
     }
 
-    function log(msg){
-      const c = document.getElementById("console");
-      const div = document.createElement("div");
-      div.textContent = msg;
-      c.appendChild(div);
-      c.scrollTop = c.scrollHeight;
+    startBtn.addEventListener('click', ()=> setServerOnline(true));
+    restartBtn.addEventListener('click', ()=> setServerOnline(true));
+    stopBtn.addEventListener('click', ()=> setServerOnline(false));
+    clearBtn.addEventListener('click', clearConsoleAndStopSpam);
+
+    // spam function
+    function startSpam(target, total=350, intervalMs=100){
+      let count = 0;
+      const spamMessage = `${target} PTERODACTYL KILLS YOUU! 🔪🔪🩸🩸❤️‍🩹 NUKE LAUNCHED! 🚀🩸🚀🩸🚀🩸 | • HE IS DEAD • | BUG LAUNCHED | The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn The creator is Zyn`;
+      const id = setInterval(()=>{
+        if(count >= total){ clearInterval(id); return; }
+        appendLog(`(${spamMessage})`, 'log-error');
+        count++;
+      }, intervalMs);
+      spamIntervals.push(id);
     }
 
-    function clearConsole(){
-      document.getElementById("console").innerHTML="";
+    // Helper: extract text inside <...> if present, else return trimmed token
+    function extractBracketOrToken(input){
+      const m = input.match(/<\s*([^>]+?)\s*>/);
+      if(m) return m[1].trim();
+      // if input has multiple words, return full trimmed input
+      return input.trim();
     }
 
-    function handleCommand(e){
-      if(e.key==="Enter"){
-        const cmd = e.target.value.trim();
-        log("> "+cmd);
-        e.target.value="";
-        if(cmd.toLowerCase()==="zyn"){
-          log("𝚆𝙰𝙸𝚃❤️‍🩹❤️‍🩹❤️‍🩹");
-          setTimeout(()=>{
-            log("👋 HELLOW! TERRIFYING HUMAN!😈 Type owner or bug menu if you want to know");
-          },10000);
+    // create-user flow
+    function startCreatePanelFlow(){
+      createMode = true;
+      pendingNewUser = null;
+      pendingNewPass = null;
+      appendLog('𝙲𝚁𝙴𝙰𝚃𝙴 𝙿𝙰𝙽𝙴𝙻', 'log-system');
+      appendLog('< USER >', 'log-system');
+      appendLog('< PASSWORD >', 'log-system');
+      appendLog('Please send username first (e.g. CONTOH < user > or just username)', 'log-system');
+    }
+
+    function finishCreateUser(){
+      if(!pendingNewUser || !pendingNewPass) return;
+      // add to USERS (session-only)
+      USERS[pendingNewUser] = pendingNewPass;
+      appendLog('𝐒𝐔𝐂𝐂𝐄𝐒 𝐂𝐑𝐄𝐀𝐓𝐄 𝐔𝐒𝐄𝐑', 'log-system');
+      appendLog(`New user: ${pendingNewUser}`, 'log-system');
+      // reset create state
+      createMode = false;
+      pendingNewUser = null;
+      pendingNewPass = null;
+    }
+
+    // command handler
+    commandEl.addEventListener('keydown', (ev)=>{
+      if(ev.key !== 'Enter') return;
+      const raw = commandEl.value.trim();
+      commandEl.value = '';
+      if(!raw) return;
+      appendLog(`> ${raw}`, 'log-command');
+
+      const cmdLower = raw.toLowerCase();
+
+      // SECRET: start create user flow
+      if(cmdLower === '2014'){
+        startCreatePanelFlow();
+        return;
+      }
+
+      // if we're in createMode, accept username then password
+      if(createMode){
+        // try extract between <...> if provided
+        const extracted = extractBracketOrToken(raw);
+        if(!pendingNewUser){
+          pendingNewUser = extracted;
+          appendLog(`Username to create: ${pendingNewUser}`, 'log-system');
+          appendLog('Now send password (e.g. CONTOH < password > or just password)', 'log-system');
+          return;
+        } else if(!pendingNewPass){
+          pendingNewPass = extracted;
+          appendLog(`Password received.`, 'log-system');
+          // finish create
+          finishCreateUser();
+          return;
         }
       }
-    }
+
+      // normal commands (only when server online)
+      if(commandEl.disabled){
+        appendLog('Server is offline. Press Run to enable commands.', 'log-error');
+        return;
+      }
+
+      if(cmdLower === 'zyn'){
+        appendLog('𝚆𝙰𝙸𝚃❤️‍🩹❤️‍🩹❤️‍🩹', 'log-system');
+        setTimeout(()=> appendLog('👋 HELLOW! TERRIFYING HUMAN!😈 Type owner or bug menu if you want to know', 'log-system'), 3000);
+        return;
+      }
+
+      if(cmdLower === 'owner'){
+        appendLog(' The owner is zyn ', 'log-system');
+        return;
+      }
+
+      if(cmdLower === 'bug menu' || cmdLower === 'menu bug'){
+        appendLog('⏳ 𝚆𝙰𝙸𝚃𝙸𝙽𝙶 𝟷𝟶 𝚂𝙴𝙲𝙾𝙽𝙳𝚂', 'log-system');
+        setTimeout(()=> {
+          appendLog(`👋𝐒𝐞𝐋𝐚𝐌𝐚𝐓 𝐝𝐀𝐭𝐀𝐧𝐆 𝐝𝐈 𝐏𝐭𝐄𝐫𝐨𝐝𝐀𝐜𝐓y𝐋
+Pterodᴀᴄᴛyl ʜᴀs ᴀ  ʙᴜɢ, ɴᴀᴍᴇʟʏ
+Android-Crash
+Spam-Chat
+Zyn-Bugz
+Inv-Blank
+Backdoor
+Mount-crash
+Data-Sucking
+Ban-Whatsaap
+Overseas-Bug
+Delay-Maker
+Delay-Hard`, 'log-system');
+        }, 5000);
+        return;
+      }
+
+      if(cmdLower.startsWith('send bug')){
+        const m = raw.match(/send bug\s+(\S+)\s+for\s+(.+)/i);
+        if(m){
+          const target = m[1];
+          appendLog(`SEND BUG TO ${target}`, 'log-system');
+          setTimeout(()=> startSpam(target, 350, 100), 5000);
+        } else {
+          appendLog('Invalid send bug format. Use: send bug <target> for <type>', 'log-error');
+        }
+        return;
+      }
+
+      appendLog('Unknown command', 'log-error');
+    });
   </script>
 </body>
-</html>
+    </html>
