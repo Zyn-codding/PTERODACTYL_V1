@@ -5,55 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mini Pterodactyl Panel</title>
 <style>
-  body {
-    font-family: monospace;
-    background-color: #1e1e2f;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-  #login, #panel {
-    width: 400px;
-    padding: 20px;
-    border-radius: 8px;
-    background-color: #2a2a3f;
-    display: none;
-    flex-direction: column;
-  }
-  #login { display: flex; }
-  input {
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 4px;
-    border: none;
-    width: 100%;
-  }
-  button {
-    padding: 10px;
-    margin: 5px 2px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    color: #fff;
-    font-weight: bold;
-  }
-  #start { background-color: #3498db; }
-  #restart { background-color: #7f8c8d; }
-  #stop { background-color: #e74c3c; }
-  #console {
-    background-color: #000;
-    height: 200px;
-    margin-top: 10px;
-    padding: 10px;
-    overflow-y: auto;
-    border-radius: 4px;
-  }
-  #command {
-    margin-top: 10px;
-    width: 100%;
-  }
+body {
+  font-family: monospace;
+  background-color: #1e1e2f;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+#login, #panel {
+  width: 450px;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #2a2a3f;
+  display: none;
+  flex-direction: column;
+}
+#login { display: flex; }
+
+input {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 4px;
+  border: none;
+  width: 100%;
+  background-color: #3a3a5a;
+  color: #fff;
+}
+
+button {
+  padding: 10px 15px;
+  margin: 5px 2px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 3px 0 #222;
+  transition: 0.2s;
+}
+button:hover { opacity: 0.8; transform: translateY(1px); }
+button:active { transform: translateY(2px); }
+
+#start { background-color: #3498db; }
+#restart { background-color: #7f8c8d; }
+#stop { background-color: #e74c3c; }
+
+#console {
+  background-color: #000;
+  height: 250px;
+  margin-top: 10px;
+  padding: 10px;
+  overflow-y: auto;
+  border-radius: 4px;
+  scroll-behavior: smooth;
+}
+
+.log-info { color: #3498db; }
+.log-warn { color: #f1c40f; }
+.log-error { color: #e74c3c; }
+.log-command { color: #2ecc71; }
+
+.blink {
+  animation: blink 0.3s;
+}
+@keyframes blink {
+  0% { background-color: #222; }
+  50% { background-color: #555; }
+  100% { background-color: #222; }
+}
+
+#command {
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+  background-color: #3a3a5a;
+  color: #fff;
+}
 </style>
 </head>
 <body>
@@ -90,19 +123,19 @@ const startBtn = document.getElementById('start');
 const restartBtn = document.getElementById('restart');
 const stopBtn = document.getElementById('stop');
 
-const dummyLogs = [
-  "container@pterodactyl~ Server marked as offline...",
-  "Starting server...",
-  "Server booting up...",
-  "Server online!",
-  "Performing routine check..."
-];
-
-// Simple username/password
 const users = [
   {user: "ROWR123", pass: "ROWR12311"},
   {user: "GOG_GOG", pass: "ROLE_ADMIN"},
   {user: "SPIDER", pass: "SPIDERMAN"}
+];
+
+// Dummy logs
+const dummyLogs = [
+  {text: "Server marked as offline...", type: "log-error"},
+  {text: "Starting server...", type: "log-info"},
+  {text: "Server booting up...", type: "log-warn"},
+  {text: "Server online!", type: "log-info"},
+  {text: "Performing routine check...", type: "log-info"}
 ];
 
 // Login handler
@@ -111,142 +144,52 @@ loginBtn.addEventListener('click', () => {
   const pass = passwordInput.value;
   const valid = users.find(u => u.user === user && u.pass === pass);
   if(valid){
+    loginMsg.style.color = "#2ecc71";
     loginMsg.textContent = "Login successful! Loading panel...";
     setTimeout(() => {
       loginDiv.style.display = "none";
       panelDiv.style.display = "flex";
+      appendLog(`[INFO] Welcome ${user}!`, "log-info");
       startDummyLogs();
     }, 3000);
   } else {
+    loginMsg.style.color = "#e74c3c";
     loginMsg.textContent = "Invalid credentials!";
   }
 });
 
+// Append log with blink effect
+function appendLog(text, type="log-info"){
+  const p = document.createElement('div');
+  p.className = type + " blink";
+  p.innerHTML = text;
+  consoleDiv.appendChild(p);
+  consoleDiv.scrollTop = consoleDiv.scrollHeight;
+  setTimeout(()=>{p.classList.remove("blink");}, 300);
+}
+
 // Dummy console log
-function startDummyLogs() {
+function startDummyLogs(){
   let i = 0;
   const interval = setInterval(() => {
     if(i >= dummyLogs.length) { clearInterval(interval); return; }
-    appendLog(dummyLogs[i]);
+    appendLog(dummyLogs[i].text, dummyLogs[i].type);
     i++;
   }, 1000);
-}
-
-function appendLog(text){
-  consoleDiv.innerHTML += text + "<br>";
-  consoleDiv.scrollTop = consoleDiv.scrollHeight;
 }
 
 // Command input
 commandInput.addEventListener('keydown', (e) => {
   if(e.key === "Enter" && commandInput.value.trim() !== ""){
-    appendLog("> " + commandInput.value.trim());
+    appendLog(`[${usernameInput.value}@server~] ${commandInput.value.trim()}`, "log-command");
     commandInput.value = "";
   }
 });
 
 // Button actions
-startBtn.addEventListener('click', () => appendLog("[START] Server started."));
-restartBtn.addEventListener('click', () => appendLog("[RESTART] Server restarting..."));
-stopBtn.addEventListener('click', () => appendLog("[STOP] Server stopped."));
-</script>
-
-</body>
-</html><div id="panelPage">
-<div class="nav">
-    <button class="active" data-page="console">Console</button>
-    <button data-page="files">Files</button>
-    <button data-page="database">Database</button>
-    <button data-page="schedules">Schedules</button>
-</div>
-
-<div id="console" class="page active">
-    <h2>Console</h2>
-    <button class="action run">Run</button>
-    <button class="action restart">Restart</button>
-    <button class="action stop">Stop</button>
-</div>
-
-<div id="files" class="page">
-    <h2>Files</h2>
-    <input type="file" id="fileInput" style="display:none;">
-    <button class="action" id="placeFiles">Place Files</button>
-</div>
-
-<div id="database" class="page">
-    <h2>Database</h2>
-    <p>Dummy page untuk database</p>
-</div>
-
-<div id="schedules" class="page">
-    <h2>Schedules</h2>
-    <p>Dummy page untuk schedules</p>
-</div>
-
-<div id="notifPanel"></div>
-</div>
-
-<script>
-// Login
-const loginBtn = document.getElementById('loginBtn');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const notifLogin = document.getElementById('notif');
-const loginPage = document.getElementById('loginPage');
-const panelPage = document.getElementById('panelPage');
-
-loginBtn.addEventListener('click', () => {
-    const user = usernameInput.value.trim();
-    const pass = passwordInput.value.trim();
-    if(user === 'press' && pass === 'Testione'){
-        notifLogin.style.color = '#4caf50';
-        notifLogin.textContent = 'Login berhasil, tunggu sebentar...';
-        notifLogin.style.display = 'block';
-        setTimeout(() => {
-            loginPage.style.display = 'none';
-            panelPage.style.display = 'block';
-        }, 3000); // delay 3 detik
-    } else {
-        notifLogin.style.color = '#ff5252';
-        notifLogin.textContent = 'Username atau password salah';
-        notifLogin.style.display = 'block';
-        setTimeout(()=>{ notifLogin.style.display = 'none'; },2000);
-    }
-});
-
-// Panel navigation
-const navButtons = document.querySelectorAll('.nav button');
-const pages = document.querySelectorAll('.page');
-const notif = document.getElementById('notifPanel');
-
-navButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        navButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const pageId = btn.getAttribute('data-page');
-        pages.forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-    });
-});
-
-// Console buttons
-document.querySelector('.action.run').addEventListener('click', () => showNotif('Server running...'));
-document.querySelector('.action.restart').addEventListener('click', () => showNotif('Server restarted'));
-document.querySelector('.action.stop').addEventListener('click', () => showNotif('Server stopped'));
-
-// Files page
-const fileInput = document.getElementById('fileInput');
-document.getElementById('placeFiles').addEventListener('click', () => { fileInput.click(); });
-fileInput.addEventListener('change', (e) => {
-    if(e.target.files.length > 0) showNotif(`File selected: ${e.target.files[0].name}`);
-});
-
-// Function notif
-function showNotif(msg) {
-    notif.textContent = msg;
-    notif.style.display = 'block';
-    setTimeout(() => { notif.style.display = 'none'; }, 2000);
-}
+startBtn.addEventListener('click', () => appendLog("[START] Server started.", "log-info"));
+restartBtn.addEventListener('click', () => appendLog("[RESTART] Server restarting...", "log-warn"));
+stopBtn.addEventListener('click', () => appendLog("[STOP] Server stopped.", "log-error"));
 </script>
 
 </body>
